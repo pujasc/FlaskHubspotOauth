@@ -53,6 +53,18 @@ def get_token():
     ShowContacts()
     return 'Authorization Complete. Please continue with Slack.'
 
+@app.route('/refresh_token',methods=["GET"])
+def get_refresh_token():
+    oauth = OAuth2Session(app_config["client_id"], state=app_config['state'])
+    new_token=oauth.refresh_token(app_config['token_uri'],
+    body=f"""grant_type=refresh_token&client_id={app_config["client_id"]}&client_secret={app_config["client_secret"]}&refresh_token={app_config["token"].get('refresh_token')}""",
+    )
+    app_config["oauth_token"]=new_token
+    #have stored in oauth_token instead of token to compare
+    SaveTokenToFile(new_token)
+    print()
+    return "Token Refreshed sucessfully!!!"
+
 def SaveTokenToFile(token):
     with open('hubspottoken.pickle', 'wb') as tokenfile:
         pickle.dump(token, tokenfile)
@@ -67,10 +79,7 @@ def ShowContacts():
     )
 
     # Call the 'Get all contacts' API endpoint
-    response = hubspot.get(
-            'https://api.hubapi.com/contacts/v1/lists/all/contacts/all', 
-            #params={ 'count': 1 } # Return only 1 result -- for demo purposes
-        )
+    response = hubspot.get('https://api.hubapi.com/contacts/v1/lists/all/contacts/all',)
     print('-----------------------------------------')
     print(json.dumps(response.json(), indent=2, sort_keys=True))
 
